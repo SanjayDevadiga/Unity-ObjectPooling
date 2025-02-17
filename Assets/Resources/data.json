@@ -1,0 +1,109 @@
+{
+    "filters": [
+        {
+            "filterName": "Watches",
+            "subFilters": [
+                {
+                    "subFilterName": "Male",
+                    "items": [
+                        {"name": "Rolex", "description": "Luxury Swiss watch with automatic movement."},
+                        {"name": "Omega", "description": "High precision timepiece with a classic design."},
+                        {"name": "Tag Heuer", "description": "Sports chronograph watch for professionals."},
+                        {"name": "Seiko", "description": "Japanese automatic watch with sleek design."},
+                        {"name": "Citizen", "description": "Eco-friendly solar-powered watch."}
+                    ]
+                },
+                {
+                    "subFilterName": "Female",
+                    "items": [
+                        {"name": "Cartier", "description": "Elegant gold watch with diamond details."},
+                        {"name": "Fossil", "description": "Stylish leather strap watch for everyday use."},
+                        {"name": "Michael Kors", "description": "Trendy watch with rose gold finish."},
+                        {"name": "Bulova", "description": "Diamond-accented stainless steel watch."},
+                        {"name": "Anne Klein", "description": "Fashion-forward watch with ceramic bracelet."}
+                    ]
+                },
+                {
+                    "subFilterName": "Kids",
+                    "items": [
+                        {"name": "Casio Kids", "description": "Durable digital watch with colorful strap."},
+                        {"name": "Timex", "description": "Easy-to-read analog watch for kids."},
+                        {"name": "Disney", "description": "Fun character-themed watch for children."},
+                        {"name": "LEGO", "description": "Interchangeable strap watch with LEGO theme."},
+                        {"name": "Flik Flak", "description": "Swiss-made watch designed for kids learning time."}
+                    ]
+                }
+            ]
+        },
+        {
+            "filterName": "Cloths",
+            "subFilters": [
+                {
+                    "subFilterName": "Male",
+                    "items": [
+                        {"name": "Shirt", "description": "Cotton casual shirt perfect for daily wear."},
+                        {"name": "Jeans", "description": "Slim-fit denim jeans with stretch fabric."},
+                        {"name": "Jacket", "description": "Warm and stylish leather jacket."},
+                        {"name": "Suit", "description": "Tailored suit for formal occasions."},
+                        {"name": "T-shirt", "description": "Breathable and lightweight cotton t-shirt."}
+                    ]
+                },
+                {
+                    "subFilterName": "Female",
+                    "items": [
+                        {"name": "Dress", "description": "Elegant evening dress with a modern cut."},
+                        {"name": "Skirt", "description": "Chic midi skirt with floral print."},
+                        {"name": "Blouse", "description": "Silk blouse for a sophisticated look."},
+                        {"name": "Leggings", "description": "Stretchable leggings ideal for casual outings."},
+                        {"name": "Coat", "description": "Long winter coat with fur lining."}
+                    ]
+                },
+                {
+                    "subFilterName": "Kids",
+                    "items": [
+                        {"name": "Onesie", "description": "Soft cotton onesie for newborns."},
+                        {"name": "Sweater", "description": "Warm woolen sweater with fun patterns."},
+                        {"name": "Jumpsuit", "description": "Comfortable jumpsuit for active kids."},
+                        {"name": "Shorts", "description": "Breathable cotton shorts for summer."},
+                        {"name": "Raincoat", "description": "Waterproof raincoat with hood."}
+                    ]
+                }
+            ]
+        },
+        {
+            "filterName": "Jwelry",
+            "subFilters": [
+                {
+                    "subFilterName": "Male",
+                    "items": [
+                        {"name": "Bracelet", "description": "Leather bracelet with stainless steel clasp."},
+                        {"name": "Ring", "description": "Minimalist silver ring for a modern touch."},
+                        {"name": "Necklace", "description": "Stylish chain necklace for men."},
+                        {"name": "Cufflinks", "description": "Classic cufflinks for formal suits."},
+                        {"name": "Pendant", "description": "Silver pendant with engraved design."}
+                    ]
+                },
+                {
+                    "subFilterName": "Female",
+                    "items": [
+                        {"name": "Necklace", "description": "Elegant pearl necklace for formal events."},
+                        {"name": "Earrings", "description": "Gold-plated earrings with gemstone accents."},
+                        {"name": "Bracelet", "description": "Diamond-studded bracelet for a luxurious look."},
+                        {"name": "Ring", "description": "Engagement ring with sparkling diamond."},
+                        {"name": "Bangle", "description": "Charming gold bangle set."}
+                    ]
+                },
+                {
+                    "subFilterName": "Kids",
+                    "items": [
+                        {"name": "Charm Bracelet", "description": "Cute charm bracelet with fun designs."},
+                        {"name": "Pendant", "description": "Cartoon-themed pendant for kids."},
+                        {"name": "Beaded Necklace", "description": "Colorful beaded necklace for little ones."},
+                        {"name": "Friendship Band", "description": "Trendy friendship band with adjustable strap."},
+                        {"name": "Anklet", "description": "Delicate anklet with small charms."}
+                    ]
+                }
+            ]
+        }
+    ]
+}
