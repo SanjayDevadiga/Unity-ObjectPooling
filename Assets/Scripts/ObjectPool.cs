@@ -5,14 +5,14 @@ using UnityEngine;
 public class ObjectPool : MonoBehaviour
 {
     public GameObject prefab;
-    public int poolSize = 50;
-    private Queue<GameObject> poolQueue = new Queue<GameObject>();
+    public int poolSize = 45;
+    private readonly Queue<GameObject> poolQueue = new();
 
     void Start()
     {
         for (int i = 0; i < poolSize; i++)
         {
-            GameObject obj = Instantiate(prefab);
+            GameObject obj = Instantiate(prefab, transform);
             obj.SetActive(false);
             poolQueue.Enqueue(obj);
         }
@@ -23,8 +23,7 @@ public class ObjectPool : MonoBehaviour
         if (poolQueue.Count > 0)
         {
             GameObject obj = poolQueue.Dequeue();
-            obj.transform.position = position;
-            obj.transform.rotation = rotation;
+            obj.transform.SetPositionAndRotation(position, rotation);
             obj.SetActive(true);
             return obj;
         }

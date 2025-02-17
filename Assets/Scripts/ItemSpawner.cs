@@ -1,8 +1,5 @@
-using System.Collections.Generic;
-using System.IO;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class FilterCollection
@@ -33,39 +30,62 @@ public class ItemData
 
 public class ItemSpawner : MonoBehaviour, IDescription
 {
-    public TextAsset jsonFile;
-    public GameObject prefab;
     public GameObject description;
     public Transform spawnPoint;
     private FilterCollection filterCollection;
-    private List<GameObject> activeItems = new List<GameObject>();
+    private readonly List<GameObject> activeItems = new();
+
+    [Space]
+    public GameObject prefab;
+    public int poolSize = 45;
+    private readonly Queue<GameObject> poolQueue = new();
 
     void Start()
     {
         LoadJsonData();
+        InitializePool();
         SpawnItemsFromJson();
+    }
+
+    private void InitializePool()
+    {
+        for (int i = 0; i < poolSize; i++)
+        {
+            GameObject obj = Instantiate(prefab, transform);
+            obj.SetActive(false);
+            poolQueue.Enqueue(obj);
+        }
+    }
+
+    private GameObject GetFromPool(Vector3 position, Quaternion rotation)
+    {
+        if (poolQueue.Count > 0)
+        {
+            GameObject obj = poolQueue.Dequeue();
+            obj.transform.SetPositionAndRotation(position, rotation);
+            obj.SetActive(true);
+            return obj;
+        }
+
+        Debug.LogWarning("Pool exhausted! Reusing existing objects.");
+        return null; // Prevent excessive instantiation
+    }
+
+    private void ReturnToPool(GameObject obj)
+    {
+        obj.SetActive(false);
+        obj.transform.SetParent(transform); // Reset parent to avoid clutter
+        obj.transform.localScale = Vector3.one; // Reset scale
+        poolQueue.Enqueue(obj);
     }
 
     void LoadJsonData()
     {
-        //string path = Path.Combine(Application.streamingAssetsPath, "data.json");
-        //if (File.Exists(path))
-        //{
-        //    string json = File.ReadAllText(path);
-        //    filterCollection = JsonUtility.FromJson<FilterCollection>(json);
-        //}
-        //else
-        //{
-        //    Debug.LogError("JSON file not found at " + path);
-        //}
-
         TextAsset jsonText = Resources.Load<TextAsset>("data");
 
-        // Deserialize the JSON string into an object
         if (jsonText != null)
         {
             filterCollection = JsonUtility.FromJson<FilterCollection>(jsonText.text);
-            Debug.Log("Loaded Data: " + filterCollection.filters.Count);
         }
         else
         {
@@ -89,253 +109,105 @@ public class ItemSpawner : MonoBehaviour, IDescription
                 {
                     foreach (var item in subFilter.items)
                     {
-                        GameObject itemObj = Instantiate(prefab, this.transform);
-                        itemObj.name = item.name;
-                        itemObj.GetComponent<ItemPrefabController>().SetValues(null, item.name, item.description, this);
-
-                        itemObj.transform.parent = spawnPoint.transform;
-                        itemObj.transform.localScale = Vector3.one;
-                        activeItems.Add(itemObj);
-                        Debug.Log("Spawned: " + item.name + " - " + item.description);
+                        SpawnItem(item);
                     }
                 }
             }
         }
     }
 
-    void ClearAllChild()
+    public void ApplyFilter(Filter watchFilter, Filter clothFilter, Filter jewelryFilter)
     {
-        foreach (Transform child in this.transform)
+        // Return all active items to the pool before applying a new filter
+        foreach (var item in activeItems)
         {
-            Destroy(child.gameObject);
+            ReturnToPool(item);
         }
-    }
+        activeItems.Clear();
 
-    public void ApplyFilter(Filter watchFilter, Filter clothFilter, Filter jwelryFilter)
-    {
-        ClearAllChild();
-        if (filterCollection == null) return;
-
-        if (!watchFilter.selected && !clothFilter.selected && !jwelryFilter.selected)
+        if (!watchFilter.selected && !clothFilter.selected && !jewelryFilter.selected)
         {
             SpawnItemsFromJson();
             return;
         }
 
-        DisplyWatchFilter(watchFilter);
-        DisplayForClothFilter(clothFilter);
-        DisplayForJwelry(jwelryFilter);
-    }
-    void DisplyWatchFilter(Filter watchFilter)
-    {
+        if (filterCollection == null) return;
+
         if (watchFilter.selected)
         {
-            if (watchFilter.SubFilter.male)
+            if(watchFilter.SubFilter.male || watchFilter.SubFilter.female || watchFilter.SubFilter.kids)
             {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Watches")
-                    {
-                        foreach (var maleItem in item.subFilters)
-                        {
-                            if (maleItem.subFilterName == "Male")
-                            {
-                                foreach (var items in maleItem.items)
-                                {
-                                    GameObject itemObj = Instantiate(prefab, this.transform);
-                                    itemObj.name = items.name;
-                                    itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
-
-                                    itemObj.transform.parent = spawnPoint.transform;
-                                    itemObj.transform.localScale = Vector3.one;
-                                    activeItems.Add(itemObj);
-                                    Debug.Log("Spawned: " + items.name + " - " + items.description);
-                                }
-                            }
-                        }
-                    }
-                }
+                HandleItemSpawn("Watches", watchFilter.SubFilter.male, "Male");
+                HandleItemSpawn("Watches", watchFilter.SubFilter.female, "Female");
+                HandleItemSpawn("Watches", watchFilter.SubFilter.kids, "Kids");
             }
-            if (watchFilter.SubFilter.female)
+            else
             {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Watches")
-                    {
-                        foreach (var maleItem in item.subFilters)
-                        {
-                            if (maleItem.subFilterName == "Female")
-                            {
-                                foreach (var items in maleItem.items)
-                                {
-                                    GameObject itemObj = Instantiate(prefab, this.transform);
-                                    itemObj.name = items.name;
-                                    itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
-
-                                    itemObj.transform.parent = spawnPoint.transform;
-                                    itemObj.transform.localScale = Vector3.one;
-                                    activeItems.Add(itemObj);
-                                    Debug.Log("Spawned: " + items.name + " - " + items.description);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (watchFilter.SubFilter.kids)
-            {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Watches")
-                    {
-                        foreach (var maleItem in item.subFilters)
-                        {
-                            if (maleItem.subFilterName == "Kids")
-                            {
-                                foreach (var items in maleItem.items)
-                                {
-                                    GameObject itemObj = Instantiate(prefab, this.transform);
-                                    itemObj.name = items.name;
-                                    itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
-
-                                    itemObj.transform.parent = spawnPoint.transform;
-                                    itemObj.transform.localScale = Vector3.one;
-                                    activeItems.Add(itemObj);
-                                    Debug.Log("Spawned: " + items.name + " - " + items.description);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!watchFilter.SubFilter.kids && !watchFilter.SubFilter.male && !watchFilter.SubFilter.female)
-            {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Watches")
-                    {
-                        foreach (var category in item.subFilters)
-                        {
-                            foreach (var items in category.items)
-                            {
-                                GameObject itemObj = Instantiate(prefab, this.transform);
-                                itemObj.name = items.name;
-                                itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
-
-                                itemObj.transform.parent = spawnPoint.transform;
-                                itemObj.transform.localScale = Vector3.one;
-                                activeItems.Add(itemObj);
-                                Debug.Log("Spawned: " + items.name + " - " + items.description);
-                            }
-                        }
-                    }
-                }
+                SpawnAll("Watches");
             }
         }
-    }
 
-    void DisplayForClothFilter(Filter clothFilter)
-    {
         if (clothFilter.selected)
         {
-            if (clothFilter.SubFilter.male)
+            if (clothFilter.SubFilter.male || clothFilter.SubFilter.female || clothFilter.SubFilter.kids)
             {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Cloths")
-                    {
-                        foreach (var maleItem in item.subFilters)
-                        {
-                            if (maleItem.subFilterName == "Male")
-                            {
-                                foreach (var items in maleItem.items)
-                                {
-                                    GameObject itemObj = Instantiate(prefab, this.transform);
-                                    itemObj.name = items.name;
-                                    itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
+                HandleItemSpawn("Cloths", clothFilter.SubFilter.male, "Male");
+                HandleItemSpawn("Cloths", clothFilter.SubFilter.female, "Female");
+                HandleItemSpawn("Cloths", clothFilter.SubFilter.kids, "Kids");
+            }
+            else
+            {
+                SpawnAll("Cloths");
+            }     
+        }
 
-                                    itemObj.transform.parent = spawnPoint.transform;
-                                    itemObj.transform.localScale = Vector3.one;
-                                    activeItems.Add(itemObj);
-                                    Debug.Log("Spawned: " + items.name + " - " + items.description);
-                                }
-                            }
-                        }
+        if (jewelryFilter.selected)
+        {
+            if (jewelryFilter.SubFilter.male || jewelryFilter.SubFilter.female || jewelryFilter.SubFilter.kids)
+            {
+                HandleItemSpawn("Jwelry", jewelryFilter.SubFilter.male, "Male");
+                HandleItemSpawn("Jwelry", jewelryFilter.SubFilter.female, "Female");
+                HandleItemSpawn("Jwelry", jewelryFilter.SubFilter.kids, "Kids");
+            }
+            else
+            {
+                SpawnAll("Jwelry");
+            }
+        }
+    }
+
+    private void SpawnAll(string categoryName)
+    {
+        foreach (var item in filterCollection.filters)
+        {
+            if (item.filterName == categoryName)
+            {
+                foreach (var subFilter in item.subFilters)
+                {
+                    foreach (var itemData in subFilter.items)
+                    {
+                        SpawnItem(itemData);
                     }
                 }
             }
-            if (clothFilter.SubFilter.female)
-            {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Cloths")
-                    {
-                        foreach (var maleItem in item.subFilters)
-                        {
-                            if (maleItem.subFilterName == "Female")
-                            {
-                                foreach (var items in maleItem.items)
-                                {
-                                    GameObject itemObj = Instantiate(prefab, this.transform);
-                                    itemObj.name = items.name;
-                                    itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
+        }
+    }
 
-                                    itemObj.transform.parent = spawnPoint.transform;
-                                    itemObj.transform.localScale = Vector3.one;
-                                    activeItems.Add(itemObj);
-                                    Debug.Log("Spawned: " + items.name + " - " + items.description);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (clothFilter.SubFilter.kids)
-            {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Cloths")
-                    {
-                        foreach (var maleItem in item.subFilters)
-                        {
-                            if (maleItem.subFilterName == "Kids")
-                            {
-                                foreach (var items in maleItem.items)
-                                {
-                                    GameObject itemObj = Instantiate(prefab, this.transform);
-                                    itemObj.name = items.name;
-                                    itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
+    private void HandleItemSpawn(string categoryName, bool filterCondition, string subFilterName)
+    {
+        if (!filterCondition) return;
 
-                                    itemObj.transform.parent = spawnPoint.transform;
-                                    itemObj.transform.localScale = Vector3.one;
-                                    activeItems.Add(itemObj);
-                                    Debug.Log("Spawned: " + items.name + " - " + items.description);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (!clothFilter.SubFilter.kids && !clothFilter.SubFilter.male && !clothFilter.SubFilter.female)
+        foreach (var item in filterCollection.filters)
+        {
+            if (item.filterName == categoryName)
             {
-                foreach (var item in filterCollection.filters)
+                foreach (var subFilter in item.subFilters)
                 {
-                    if (item.filterName == "Cloths")
+                    if (subFilter.subFilterName == subFilterName)
                     {
-                        foreach (var category in item.subFilters)
+                        foreach (var itemData in subFilter.items)
                         {
-                            foreach (var items in category.items)
-                            {
-                                GameObject itemObj = Instantiate(prefab, this.transform);
-                                itemObj.name = items.name;
-                                itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
-
-                                itemObj.transform.parent = spawnPoint.transform;
-                                itemObj.transform.localScale = Vector3.one;
-                                activeItems.Add(itemObj);
-                                Debug.Log("Spawned: " + items.name + " - " + items.description);
-                            }
+                            SpawnItem(itemData);
                         }
                     }
                 }
@@ -343,114 +215,18 @@ public class ItemSpawner : MonoBehaviour, IDescription
         }
     }
 
-    void DisplayForJwelry(Filter jwelryFilter)
+    private void SpawnItem(ItemData item)
     {
-        if (jwelryFilter.selected)
-        {
-            if (jwelryFilter.SubFilter.male)
-            {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Jwelry")
-                    {
-                        foreach (var maleItem in item.subFilters)
-                        {
-                            if (maleItem.subFilterName == "Male")
-                            {
-                                foreach (var items in maleItem.items)
-                                {
-                                    GameObject itemObj = Instantiate(prefab, this.transform);
-                                    itemObj.name = items.name;
-                                    itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
+        GameObject itemObj = GetFromPool(spawnPoint.position, Quaternion.identity);
 
-                                    itemObj.transform.parent = spawnPoint.transform;
-                                    itemObj.transform.localScale = Vector3.one;
-                                    activeItems.Add(itemObj);
-                                    Debug.Log("Spawned: " + items.name + " - " + items.description);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (jwelryFilter.SubFilter.female)
-            {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Jwelry")
-                    {
-                        foreach (var maleItem in item.subFilters)
-                        {
-                            if (maleItem.subFilterName == "Female")
-                            {
-                                foreach (var items in maleItem.items)
-                                {
-                                    GameObject itemObj = Instantiate(prefab, this.transform);
-                                    itemObj.name = items.name;
-                                    itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
+        if (itemObj == null) return; // Prevents instantiating new objects beyond the pool
 
-                                    itemObj.transform.parent = spawnPoint.transform;
-                                    itemObj.transform.localScale = Vector3.one;
-                                    activeItems.Add(itemObj);
-                                    Debug.Log("Spawned: " + items.name + " - " + items.description);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (jwelryFilter.SubFilter.kids)
-            {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Watches")
-                    {
-                        foreach (var maleItem in item.subFilters)
-                        {
-                            if (maleItem.subFilterName == "Kids")
-                            {
-                                foreach (var items in maleItem.items)
-                                {
-                                    GameObject itemObj = Instantiate(prefab, this.transform);
-                                    itemObj.name = items.name;
-                                    itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
+        itemObj.name = item.name;
+        itemObj.GetComponent<ItemPrefabController>().SetValues(null, item.name, item.description, this);
 
-                                    itemObj.transform.parent = spawnPoint.transform;
-                                    itemObj.transform.localScale = Vector3.one;
-                                    activeItems.Add(itemObj);
-                                    Debug.Log("Spawned: " + items.name + " - " + items.description);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (!jwelryFilter.SubFilter.kids && !jwelryFilter.SubFilter.male && !jwelryFilter.SubFilter.female)
-            {
-                foreach (var item in filterCollection.filters)
-                {
-                    if (item.filterName == "Jwelry")
-                    {
-                        foreach (var category in item.subFilters)
-                        {
-                            foreach (var items in category.items)
-                            {
-                                GameObject itemObj = Instantiate(prefab, this.transform);
-                                itemObj.name = items.name;
-                                itemObj.GetComponent<ItemPrefabController>().SetValues(null, items.name, items.description, this);
-
-                                itemObj.transform.parent = spawnPoint.transform;
-                                itemObj.transform.localScale = Vector3.one;
-                                activeItems.Add(itemObj);
-                                Debug.Log("Spawned: " + items.name + " - " + items.description);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        itemObj.transform.localScale = Vector3.one;
+        activeItems.Add(itemObj);
+        Debug.Log("Spawned: " + item.name + " - " + item.description);
     }
 }
-
-
 
